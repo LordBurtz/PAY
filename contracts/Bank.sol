@@ -11,6 +11,7 @@ contract Bank is IBank, SafeMath {
     string public unsupportedToken = "token not supported";
 
     mapping (address => Account) public account;
+    mapping (address => uint256) public balanceOf;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
@@ -35,7 +36,28 @@ contract Bank is IBank, SafeMath {
         return true;
     }
 
-    function withdraw(address token, uint256 amount) external override returns (uint256) {}
+    function withdraw(address token, uint256 amount) external override returns (uint256) {
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE && token != hack_coin) {
+            revert("token not supported");
+        }
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            //do the convert to ether stuff here
+        }
+        if (account[msg.sender].deposit == 0) revert("no balance");
+        if (amount == 0) amount = account[msg.sender].deposit;
+        if (amount > account[msg.sender].deposit) revert("amount exceeds balance");
+        if (amount < 0) revert("negativ not supported");
+        account[msg.sender].deposit -= amount;
+        msg.sender.transfer(safeMul(amount, amount + calculateInterest(account[msg.sender])));
+        return uint256(amount);
+    }
+
+    function calculateInterest(Account memory account) internal view returns(uint256) {
+        uint256 newInterest = account.deposit * block.number - account.lastInterestBlock;
+        account.interest += newInterest;
+        account.lastInterestBlock = block.number;
+        return newInterest;
+    }
 
     function borrow(address token, uint256 amount) external override returns (uint256) {}
 
