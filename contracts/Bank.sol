@@ -31,13 +31,22 @@ contract Bank is IBank, SafeMath {
         
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
+
+            uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+            account[msg.sender].interest += interest;
+            account[msg.sender].lastInterestBlock = block.number;
+
             account[msg.sender].deposit += amount;
         } else if (token == hack_coin) {
             //ratio = oracle.getVirtualPrice(token) * amount * 1e18;
             //if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
+
+            uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+            account[msg.sender].interest += interest;
+            account[msg.sender].lastInterestBlock = block.number;
+
             account[msg.sender].deposit += amount;
             require(HACK.transferFrom(msg.sender, address(this), amount));
-            
         } else{
             revert(unsupportedToken);
         }
@@ -45,9 +54,7 @@ contract Bank is IBank, SafeMath {
         emit Deposit(msg.sender, token, amount);
         return true;
 
-        uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
-        account[msg.sender].interest += interest;
-        account[msg.sender].lastInterestBlock = block.number;
+        
 
         account[msg.sender].deposit += amount;
         account[msg.sender].lastInterestBlock = block.number;
@@ -123,8 +130,8 @@ contract Bank is IBank, SafeMath {
             if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE && token != hack_coin)
             revert("token not supported");
             if (token == hack_coin) {
-                //get the correct ratio here via oracle
+                
             }
-            return safeMul(account[msg.sender].deposit, ratio);
+            return safeAdd(safeMul(account[msg.sender].deposit, ratio), calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number));
         }
 }
