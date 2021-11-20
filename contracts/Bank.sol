@@ -6,8 +6,7 @@ import "./interfaces/IPriceOracle.sol";
 import "./SafeMath.sol";
 
 contract Bank is IBank, SafeMath {
-string public name;
-    address public oracle;
+    IPriceOracle public oracle;
     address public hack_coin;
     string public unsupportedToken = "token not supported";
 
@@ -16,7 +15,7 @@ string public name;
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     constructor (address _priceOracle, address _hack_coin) {
-        oracle = _priceOracle;
+        oracle = IPriceOracle(_priceOracle);
         hack_coin = _hack_coin;
     }
 
@@ -31,6 +30,8 @@ string public name;
         } else{
             revert(unsupportedToken);
         }
+        account[msg.sender].lastInterestBlock = block.number;
+        emit Deposit(msg.sender, token, amount);
         return true;
     }
 
