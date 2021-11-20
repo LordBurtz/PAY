@@ -24,6 +24,7 @@ string public name;
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
         account[msg.sender].deposit += amount;
+        account[msg.sender].lastInterestBlock = block.number;
         
         // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
         // uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
@@ -38,20 +39,39 @@ string public name;
             //do the convert to ether stuff here
         }
         if (account[msg.sender].deposit == 0) revert("no balance");
-        if (amount == 0) amount = account[msg.sender].deposit;
         if (amount > account[msg.sender].deposit) revert("amount exceeds balance");
         if (amount < 0) revert("negativ not supported");
+
+        uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+        account[msg.sender].interest += interest;
+        account[msg.sender].lastInterestBlock = block.number;
+        
+        uint256 absolut;
+        if (amount == 0) {
+            absolut = account[msg.sender].deposit + account[msg.sender].interest;
+            account[msg.sender].deposit = 0;
+            account[msg.sender].interest = 0;
+        } else {
+            absolut = amount;
+            account[msg.sender].deposit -= amount;
+            account[msg.sender].interest -= interest;
+            absolut += interest;
+        }
+
+        msg.sender.transfer(absolut);
+        emit Withdraw(msg.sender, token, absolut);
+        return absolut;
+
+        /*
         account[msg.sender].deposit -= amount;
         msg.sender.transfer(safeMul(amount, amount + calculateInterest(account[msg.sender])));
         emit Withdraw(msg.sender, token, amount);
         return uint256(amount);
+        */
     }
 
-    function calculateInterest(Account memory account) internal view returns(uint256) {
-        uint256 newInterest = account.deposit * block.number - account.lastInterestBlock;
-        account.interest += newInterest;
-        account.lastInterestBlock = block.number;
-        return newInterest;
+    function calculateInterest(uint256 deposit, uint256 blockInterest, uint256 currentBlock) internal view returns(uint256) {
+        return safeDiv(safeMul(safeMul((currentBlock - blockInterest), 3), deposit), 10000);
     }
 
     function borrow(address token, uint256 amount) external override returns (uint256) {}
@@ -83,6 +103,9 @@ string public name;
             if (token == hack_coin) {
                 //get the correct ratio here via oracle
             }
+                    uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+        account[msg.sender].interest += interest;
+        account[msg.sender].lastInterestBlock = block.number;
             return safeMul(account[msg.sender].deposit, ratio);
         }
 }
