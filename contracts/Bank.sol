@@ -23,8 +23,14 @@ string public name;
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
+
+        uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+        account[msg.sender].interest += interest;
+        account[msg.sender].lastInterestBlock = block.number;
+
         account[msg.sender].deposit += amount;
         account[msg.sender].lastInterestBlock = block.number;
+        
         
         // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
         // uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
@@ -70,7 +76,7 @@ string public name;
         */
     }
 
-    function calculateInterest(uint256 deposit, uint256 blockInterest, uint256 currentBlock) internal view returns(uint256) {
+    function calculateInterest(uint256 deposit, uint256 blockInterest, uint256 currentBlock) internal pure returns(uint256) {
         return safeDiv(safeMul(safeMul((currentBlock - blockInterest), 3), deposit), 10000);
     }
 
@@ -103,9 +109,6 @@ string public name;
             if (token == hack_coin) {
                 //get the correct ratio here via oracle
             }
-                    uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
-        account[msg.sender].interest += interest;
-        account[msg.sender].lastInterestBlock = block.number;
             return safeMul(account[msg.sender].deposit, ratio);
         }
 }
