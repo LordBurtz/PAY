@@ -46,8 +46,16 @@ contract Bank is IBank, SafeMath {
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {}
 
-    function borrow(address token, uint256 amount) external override returns (uint256) {}
-
+    function borrow(address token, uint256 amount) external override returns (uint256) {
+        if (token == hack_coin) {
+            loans[msg.sender].collateral = amount;
+            balanceOf[msg.sender] = amount * 100/150;
+        }
+        else {
+            revert ("no collateral deposited");
+        }
+    }
+    
     function repay(address token, uint256 amount) payable external override returns (uint256) {
 
     }
