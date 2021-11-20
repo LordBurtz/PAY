@@ -9,12 +9,13 @@ contract Bank is IBank, SafeMath {
 string public name;
     address public oracle;
     address public hack_coin;
+    string public unsupportedToken = "token not supported";
 
     mapping (address => Account) public account;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    constructor (address _hack_coin, address _priceOracle) {
+    constructor (address _priceOracle, address _hack_coin) {
         oracle = _priceOracle;
         hack_coin = _hack_coin;
     }
@@ -23,11 +24,14 @@ string public name;
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
         
-        account[msg.sender].deposit += amount;
-        
-        // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
-        // uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
-        // return require(this.transfer(msg.sender, scaledAmount));
+        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            account[msg.sender].deposit += amount;
+        } else if (token == hack_coin) {
+            account[msg.sender].deposit += amount;
+        } else{
+            revert(unsupportedToken);
+        }
+        return true;
     }
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {}
