@@ -32,17 +32,6 @@ contract Bank is IBank, SafeMath {
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
-<<<<<<< HEAD
-
-        uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
-        account[msg.sender].interest += interest;
-        account[msg.sender].lastInterestBlock = block.number;
-
-        account[msg.sender].deposit += amount;
-        account[msg.sender].lastInterestBlock = block.number;
-        
-=======
->>>>>>> bd80c2b48cc1e63e901b1ad34098b5c9092ac703
         
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             account[msg.sender].deposit += amount;
@@ -54,6 +43,13 @@ contract Bank is IBank, SafeMath {
         account[msg.sender].lastInterestBlock = block.number;
         emit Deposit(msg.sender, token, amount);
         return true;
+
+        uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
+        account[msg.sender].interest += interest;
+        account[msg.sender].lastInterestBlock = block.number;
+
+        account[msg.sender].deposit += amount;
+        account[msg.sender].lastInterestBlock = block.number;
     }
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {
