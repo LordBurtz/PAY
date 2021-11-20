@@ -1,4 +1,5 @@
 //SPDX-License-Identifier: MIT
+//hack coin ftw
 
 pragma solidity 0.7.0;
 
