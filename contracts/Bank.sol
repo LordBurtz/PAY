@@ -5,29 +5,29 @@ import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 import "./SafeMath.sol";
 
-contract Bank is IBank {
+contract Bank is IBank, SafeMath {
 string public name;
-    IPriceOracle public oracle;
+    address public oracle;
+    address public hack_coin;
 
-    mapping (address => uint256) public balanceOf;
+    mapping (address => Account) public account;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    constructor (address hack_coin, address _priceOracle) {
+    constructor (address _hack_coin, address _priceOracle) {
         oracle = _priceOracle;
-
+        hack_coin = _hack_coin;
     }
 
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
+        require(amount > 0);
         
-        require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
-        uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
-        return require(this.transfer(msg.sender, scaledAmount));
-    }
-
-    function deposit(uint256 amount) payable external override returns(bool) {
+        account[msg.sender].deposit += amount;
         
+        // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
+        // uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
+        // return require(this.transfer(msg.sender, scaledAmount));
     }
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {}
@@ -35,10 +35,8 @@ string public name;
     function borrow(address token, uint256 amount) external override returns (uint256) {}
 
     function repay(address token, uint256 amount) payable external override returns (uint256) {
-        require(msg.value == safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
-        uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
-        require(this.transfer(msg.sender, scaledAmount));
-        }
+
+    }
 
     function liquidate(address token, address account)
         payable
@@ -56,5 +54,7 @@ string public name;
         view
         public
         override
-        returns (uint256) {}
+        returns (uint256) {
+            return account[msg.sender].deposit;
+        }
 }
