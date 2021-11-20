@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/fridolin/dev/PAY/contracts/Bank.sol": {
-      "lastModificationDate": 1637410988217,
-      "contentHash": "c4b61b271451d0998dd445fddcbd183d",
+      "lastModificationDate": 1637412874628,
+      "contentHash": "1452d45863a53a837905bc8abc89e597",
       "sourceName": "contracts/Bank.sol",
       "solcConfig": {
         "version": "0.7.0",
@@ -31,7 +31,8 @@
       "imports": [
         "./interfaces/IBank.sol",
         "./interfaces/IPriceOracle.sol",
-        "./SafeMath.sol"
+        "./SafeMath.sol",
+        "./interfaces/HackCoin.sol"
       ],
       "versionPragmas": [
         "0.7.0"
@@ -434,6 +435,39 @@
       ],
       "artifacts": [
         "DSMath"
+      ]
+    },
+    "/home/fridolin/dev/PAY/contracts/interfaces/HackCoin.sol": {
+      "lastModificationDate": 1637412528616,
+      "contentHash": "c9e90c6ec2f23e8b37980beab7ded161",
+      "sourceName": "contracts/interfaces/HackCoin.sol",
+      "solcConfig": {
+        "version": "0.7.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [],
+      "artifacts": [
+        "IERC20"
       ]
     }
   }

@@ -27,6 +27,7 @@ import type {
 
 export interface BankInterface extends ethers.utils.Interface {
   functions: {
+    "HACK()": FunctionFragment;
     "account(address)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "borrow(address,uint256)": FunctionFragment;
@@ -35,12 +36,14 @@ export interface BankInterface extends ethers.utils.Interface {
     "getCollateralRatio(address,address)": FunctionFragment;
     "hack_coin()": FunctionFragment;
     "liquidate(address,address)": FunctionFragment;
-    "name()": FunctionFragment;
+    "loans(address)": FunctionFragment;
     "oracle()": FunctionFragment;
     "repay(address,uint256)": FunctionFragment;
+    "unsupportedToken()": FunctionFragment;
     "withdraw(address,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "HACK", values?: undefined): string;
   encodeFunctionData(functionFragment: "account", values: [string]): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(
@@ -61,17 +64,22 @@ export interface BankInterface extends ethers.utils.Interface {
     functionFragment: "liquidate",
     values: [string, string]
   ): string;
-  encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(functionFragment: "loans", values: [string]): string;
   encodeFunctionData(functionFragment: "oracle", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "repay",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "unsupportedToken",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "withdraw",
     values: [string, BigNumberish]
   ): string;
 
+  decodeFunctionResult(functionFragment: "HACK", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "account", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "borrow", data: BytesLike): Result;
@@ -83,9 +91,13 @@ export interface BankInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "hack_coin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "loans", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "oracle", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "repay", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "unsupportedToken",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
@@ -185,6 +197,8 @@ export interface Bank extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    HACK(overrides?: CallOverrides): Promise<[string]>;
+
     account(
       arg0: string,
       overrides?: CallOverrides
@@ -226,7 +240,17 @@ export interface Bank extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    name(overrides?: CallOverrides): Promise<[string]>;
+    loans(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        amount: BigNumber;
+        interest: BigNumber;
+        lastInterestBlock: BigNumber;
+        collateral: BigNumber;
+      }
+    >;
 
     oracle(overrides?: CallOverrides): Promise<[string]>;
 
@@ -236,12 +260,16 @@ export interface Bank extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    unsupportedToken(overrides?: CallOverrides): Promise<[string]>;
+
     withdraw(
       token: string,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  HACK(overrides?: CallOverrides): Promise<string>;
 
   account(
     arg0: string,
@@ -284,7 +312,17 @@ export interface Bank extends BaseContract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  name(overrides?: CallOverrides): Promise<string>;
+  loans(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      amount: BigNumber;
+      interest: BigNumber;
+      lastInterestBlock: BigNumber;
+      collateral: BigNumber;
+    }
+  >;
 
   oracle(overrides?: CallOverrides): Promise<string>;
 
@@ -294,6 +332,8 @@ export interface Bank extends BaseContract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  unsupportedToken(overrides?: CallOverrides): Promise<string>;
+
   withdraw(
     token: string,
     amount: BigNumberish,
@@ -301,6 +341,8 @@ export interface Bank extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    HACK(overrides?: CallOverrides): Promise<string>;
+
     account(
       arg0: string,
       overrides?: CallOverrides
@@ -342,7 +384,17 @@ export interface Bank extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    name(overrides?: CallOverrides): Promise<string>;
+    loans(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        amount: BigNumber;
+        interest: BigNumber;
+        lastInterestBlock: BigNumber;
+        collateral: BigNumber;
+      }
+    >;
 
     oracle(overrides?: CallOverrides): Promise<string>;
 
@@ -351,6 +403,8 @@ export interface Bank extends BaseContract {
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    unsupportedToken(overrides?: CallOverrides): Promise<string>;
 
     withdraw(
       token: string,
@@ -434,6 +488,8 @@ export interface Bank extends BaseContract {
   };
 
   estimateGas: {
+    HACK(overrides?: CallOverrides): Promise<BigNumber>;
+
     account(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -466,7 +522,7 @@ export interface Bank extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    name(overrides?: CallOverrides): Promise<BigNumber>;
+    loans(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     oracle(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -476,6 +532,8 @@ export interface Bank extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    unsupportedToken(overrides?: CallOverrides): Promise<BigNumber>;
+
     withdraw(
       token: string,
       amount: BigNumberish,
@@ -484,6 +542,8 @@ export interface Bank extends BaseContract {
   };
 
   populateTransaction: {
+    HACK(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     account(
       arg0: string,
       overrides?: CallOverrides
@@ -525,7 +585,10 @@ export interface Bank extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    loans(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     oracle(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -534,6 +597,8 @@ export interface Bank extends BaseContract {
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    unsupportedToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     withdraw(
       token: string,

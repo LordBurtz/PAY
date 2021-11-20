@@ -4,9 +4,11 @@ pragma solidity 0.7.0;
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 import "./SafeMath.sol";
+import "./interfaces/HackCoin.sol";
 
 contract Bank is IBank, SafeMath {
     IPriceOracle public oracle;
+    IERC20 public HACK;
     address public hack_coin;
     string public unsupportedToken = "token not supported";
     
@@ -27,16 +29,24 @@ contract Bank is IBank, SafeMath {
     constructor (address _priceOracle, address _hack_coin) {
         oracle = IPriceOracle(_priceOracle);
         hack_coin = _hack_coin;
+        HACK = IERC20(_hack_coin);
     }
 
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
         
+        uint256 ratio = 1;
+        
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
             account[msg.sender].deposit += amount;
         } else if (token == hack_coin) {
+            //ratio = oracle.getVirtualPrice(token) * amount * 1e18;
+            //if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
             account[msg.sender].deposit += amount;
+            require(HACK.transferFrom(msg.sender, address(this), amount));
+            
         } else{
             revert(unsupportedToken);
         }
