@@ -11,10 +11,11 @@ string public name;
     address public hack_coin;
 
     mapping (address => Account) public account;
+    mapping (address => uint256) public balanceOf;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    constructor (address _hack_coin, address _priceOracle) {
+    constructor (address _priceOracle, address _hack_coin) {
         oracle = _priceOracle;
         hack_coin = _hack_coin;
     }
@@ -22,7 +23,6 @@ string public name;
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
-        
         account[msg.sender].deposit += amount;
         
         // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
@@ -30,7 +30,28 @@ string public name;
         // return require(this.transfer(msg.sender, scaledAmount));
     }
 
-    function withdraw(address token, uint256 amount) external override returns (uint256) {}
+    function withdraw(address token, uint256 amount) external override returns (uint256) {
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE && token != hack_coin) {
+            revert("token not supported");
+        }
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            //do the convert to ether stuff here
+        }
+        if (account[msg.sender].deposit == 0) revert("no balance");
+        if (amount == 0) amount = account[msg.sender].deposit;
+        if (amount > account[msg.sender].deposit) revert("amount exceeds balance");
+        if (amount < 0) revert("negativ not supported");
+        account[msg.sender].deposit -= amount;
+        msg.sender.transfer(safeMul(amount, amount + calculateInterest(account[msg.sender])));
+        return uint256(amount);
+    }
+
+    function calculateInterest(Account memory account) internal view returns(uint256) {
+        uint256 newInterest = account.deposit * block.number - account.lastInterestBlock;
+        account.interest += newInterest;
+        account.lastInterestBlock = block.number;
+        return newInterest;
+    }
 
     function borrow(address token, uint256 amount) external override returns (uint256) {}
 
