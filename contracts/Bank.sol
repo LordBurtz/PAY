@@ -49,7 +49,43 @@ contract Bank is IBank, SafeMath {
     function borrow(address token, uint256 amount) external override returns (uint256) {}
 
     function repay(address token, uint256 amount) payable external override returns (uint256) {
-
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            revert("token not supported");
+        }
+        
+        if (loans[msg.sender].amount == 0) {
+            revert("nothing to repay");
+        }
+        
+        if (msg.value < amount) {
+            revert("msg.value < amount to repay");
+        }
+        
+        uint256 interest = calculateInterestLoan(loans[msg.sender].amount, loans[msg.sender].lastInterestBlock, block.number);
+        loans[msg.sender].interest += interest;
+        loans[msg.sender].lastInterestBlock = block.number;
+        if (loans[msg.sender].amount + loans[msg.sender].interest <= amount) {
+            loans[msg.sender].amount = 0;
+            loans[msg.sender].interest = 0;
+            account[msg.sender].deposit += loans[msg.sender].collateral;
+        } else {
+            uint256 left = amount;
+            if (amount > loans[msg.sender].interest) {
+                left -= loans[msg.sender].interest;
+                loans[msg.sender].interest = 0;
+                loans[msg.sender].amount -= left;
+                return loans[msg.sender].amount;
+            } else {
+                loans[msg.sender].interest -= amount;
+                return loans[msg.sender].amount;
+            }
+        }
+        
+        return loans[msg.sender].amount;
+    }
+    
+    function calculateInterestLoan(uint256 amount, uint256 blockInterest, uint256 currentBlock) internal pure returns(uint256) {
+        return safeDiv(safeMul(safeMul((currentBlock - blockInterest), 5), amount), 10000);
     }
 
     function liquidate(address token, address account)
