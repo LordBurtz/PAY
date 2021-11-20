@@ -46,7 +46,37 @@ contract Bank is IBank, SafeMath {
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {}
 
-    function borrow(address token, uint256 amount) external override returns (uint256) {}
+/**
+     * The purpose of this function is to allow users to borrow funds by using their 
+     * deposited funds as collateral. The minimum ratio of deposited funds over 
+     * borrowed funds must not be less than 150%.
+     * @param token - the address of the token to borrow. This address must be
+     *                set to 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, otherwise  
+     *                the transaction must revert.
+     * @param amount - the amount to borrow. If this amount is set to zero (0),
+     *                 then the amount borrowed should be the maximum allowed, 
+     *                 while respecting the collateral ratio of 150%.
+     * @return - the current collateral ratio.
+     */
+    function borrow(address token, uint256 amount) external override returns (uint256) {
+        if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            revert("token not supported");
+        }
+        
+        uint256 collateral = safeDiv(safeMul(amount, 150), 100);
+        
+        if (collateral > account[msg.sender].deposit) {
+            revert("no collateral deposited");
+        }
+        
+        loans[msg.sender].amount = amount;
+        loans[msg.sender].lastInterestBlock = block.number;
+        loans[msg.sender].interest = 0;
+        loans[msg.sender].collateral = collateral;
+        account[msg.sender].deposit -= loans[msg.sender].collateral;
+        
+        return getCollateralRatio(token, msg.sender);
+    }
 
     function repay(address token, uint256 amount) payable external override returns (uint256) {
         if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
