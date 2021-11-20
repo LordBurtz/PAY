@@ -11,15 +11,6 @@ contract Bank is IBank, SafeMath {
     IERC20 public HACK;
     address public hack_coin;
     string public unsupportedToken = "token not supported";
-    
-    struct Loan {
-        uint256 amount;
-        uint256 interest;
-        uint256 lastInterestBlock;
-        uint256 collateral;
-    }
-    
-    mapping (address => Loan) public loans;
 
     mapping (address => Account) public account;
     mapping (address => uint256) public balanceOf;
@@ -42,8 +33,8 @@ contract Bank is IBank, SafeMath {
             if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
             account[msg.sender].deposit += amount;
         } else if (token == hack_coin) {
-            ratio = oracle.getVirtualPrice(token) * amount * 1e18;
-            if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
+            //ratio = oracle.getVirtualPrice(token) * amount * 1e18;
+            //if (msg.value != safeMul(ratio, amount)) revert ("wrong value");
             account[msg.sender].deposit += amount;
             require(HACK.transferFrom(msg.sender, address(this), amount));
             
