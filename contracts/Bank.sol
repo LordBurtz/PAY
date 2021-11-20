@@ -6,9 +6,18 @@ import "./interfaces/IPriceOracle.sol";
 import "./SafeMath.sol";
 
 contract Bank is IBank, SafeMath {
-string public name;
-    address public oracle;
+    IPriceOracle public oracle;
     address public hack_coin;
+    string public unsupportedToken = "token not supported";
+    
+    struct Loan {
+        uint256 amount;
+        uint256 interest;
+        uint256 lastInterestBlock;
+        uint256 collateral;
+    }
+    
+    mapping (address => Loan) public loans;
 
     mapping (address => Account) public account;
     mapping (address => uint256) public balanceOf;
@@ -16,13 +25,14 @@ string public name;
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     constructor (address _priceOracle, address _hack_coin) {
-        oracle = _priceOracle;
+        oracle = IPriceOracle(_priceOracle);
         hack_coin = _hack_coin;
     }
 
 
     function deposit(address token, uint256 amount)payable external override returns (bool) {
         require(amount > 0);
+<<<<<<< HEAD
 
         uint256 interest = calculateInterest(account[msg.sender].deposit, account[msg.sender].lastInterestBlock, block.number);
         account[msg.sender].interest += interest;
@@ -31,10 +41,19 @@ string public name;
         account[msg.sender].deposit += amount;
         account[msg.sender].lastInterestBlock = block.number;
         
+=======
+>>>>>>> bd80c2b48cc1e63e901b1ad34098b5c9092ac703
         
-        // require(msg.value >= safeMul(oracle.getVirtualPrice(token), amount)); //afaik i understand it, it returns it scaled
-        // uint256 scaledAmount = safeMul(oracle.getVirtualPrice(token), amount);
-        // return require(this.transfer(msg.sender, scaledAmount));
+        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            account[msg.sender].deposit += amount;
+        } else if (token == hack_coin) {
+            account[msg.sender].deposit += amount;
+        } else{
+            revert(unsupportedToken);
+        }
+        account[msg.sender].lastInterestBlock = block.number;
+        emit Deposit(msg.sender, token, amount);
+        return true;
     }
 
     function withdraw(address token, uint256 amount) external override returns (uint256) {
