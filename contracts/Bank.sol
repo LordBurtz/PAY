@@ -9,6 +9,15 @@ contract Bank is IBank, SafeMath {
     IPriceOracle public oracle;
     address public hack_coin;
     string public unsupportedToken = "token not supported";
+    
+    struct Loan {
+        uint256 amount;
+        uint256 interest;
+        uint256 lastInterestBlock;
+        uint256 collateral;
+    }
+    
+    mapping (address => Loan) public loans;
 
     mapping (address => Account) public account;
 
