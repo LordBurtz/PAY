@@ -43,6 +43,7 @@ string public name;
         if (amount < 0) revert("negativ not supported");
         account[msg.sender].deposit -= amount;
         msg.sender.transfer(safeMul(amount, amount + calculateInterest(account[msg.sender])));
+        emit Withdraw(msg.sender, token, amount);
         return uint256(amount);
     }
 
@@ -76,6 +77,12 @@ string public name;
         public
         override
         returns (uint256) {
-            return account[msg.sender].deposit;
+            uint256 ratio = 1;
+            if (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE && token != hack_coin)
+            revert("token not supported");
+            if (token == hack_coin) {
+                //get the correct ratio here via oracle
+            }
+            return safeMul(account[msg.sender].deposit, ratio);
         }
 }
